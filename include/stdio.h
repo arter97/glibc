@@ -114,7 +114,7 @@ extern void __funlockfile (FILE *__stream) attribute_hidden;
    possible.  */
 extern int __ftrylockfile (FILE *__stream);
 
-extern int __getc_unlocked (FILE *__fp);
+extern int __getc_unlocked (FILE *__fp) attribute_hidden;
 extern wint_t __getwc_unlocked (FILE *__fp);
 
 extern int __fxprintf (FILE *__fp, const char *__fmt, ...)
@@ -178,6 +178,7 @@ libc_hidden_proto (feof_unlocked)
 extern __typeof (feof_unlocked) __feof_unlocked attribute_hidden;
 libc_hidden_proto (ferror_unlocked)
 extern __typeof (ferror_unlocked) __ferror_unlocked attribute_hidden;
+libc_hidden_proto (getc_unlocked)
 libc_hidden_proto (fmemopen)
 /* The prototype needs repeating instead of using __typeof to use
    __THROW in C++ tests.  */
@@ -209,6 +210,12 @@ __extern_inline int
 __NTH (__ferror_unlocked (FILE *__stream))
 {
   return __ferror_unlocked_body (__stream);
+}
+
+__extern_inline int
+__getc_unlocked (FILE *__fp)
+{
+  return __getc_unlocked_body (__fp);
 }
 #  endif
 
