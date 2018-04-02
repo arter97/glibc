@@ -43,8 +43,8 @@ danish          da_DK.ISO-8859-1
 dansk		da_DK.ISO-8859-1
 deutsch		de_DE.ISO-8859-1
 dutch		nl_NL.ISO-8859-1
-eesti		et_EE.ISO-8859-1
-estonian	et_EE.ISO-8859-1
+eesti		et_EE.ISO-8859-15
+estonian	et_EE.ISO-8859-15
 finnish         fi_FI.ISO-8859-1
 french		fr_FR.ISO-8859-1
 galego		gl_ES.ISO-8859-1
@@ -72,7 +72,7 @@ nynorsk		nn_NO.ISO-8859-1
 polish          pl_PL.ISO-8859-2
 portuguese      pt_PT.ISO-8859-1
 romanian        ro_RO.ISO-8859-2
-russian         ru_RU.ISO-8859-5
+russian         ru_RU.KOI8-R
 slovak          sk_SK.ISO-8859-2
 slovene         sl_SI.ISO-8859-2
 slovenian       sl_SI.ISO-8859-2

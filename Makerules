@@ -647,6 +647,45 @@ $(common-objpfx)shlib.lds: $(common-objpfx)config.make $(..)Makerules
 		 PROVIDE(__start___libc_IO_vtables = .);\
 		 __libc_IO_vtables : { *(__libc_IO_vtables) }\
 		 PROVIDE(__stop___libc_IO_vtables = .);\
+		 PROVIDE(__start__hurd_fd_subinit = .);\
+		 _hurd_fd_subinit : { *(_hurd_fd_subinit) }\
+		 PROVIDE(__stop__hurd_fd_subinit = .);\
+		 PROVIDE(__start__hurd_XXX = .);\
+		 _hurd_XXX : { *(_hurd_XXX) }\
+		 PROVIDE(__stop__hurd_XXX = .);\
+		 PROVIDE(__start__hurd_subinit = .);\
+		 _hurd_subinit : { *(_hurd_subinit) }\
+		 PROVIDE(__stop__hurd_subinit = .);\
+		 PROVIDE(__start__hurd_proc_subinit = .);\
+		 _hurd_proc_subinit : { *(_hurd_proc_subinit) }\
+		 PROVIDE(__stop__hurd_proc_subinit = .);\
+		 PROVIDE(__start__hurd_reauth_hook = .);\
+		 _hurd_reauth_hook : { *(_hurd_reauth_hook) }\
+		 PROVIDE(__stop__hurd_reauth_hook = .);\
+		 PROVIDE(__start__hurd_pgrp_changed_hook = .);\
+		 _hurd_pgrp_changed_hook : { *(_hurd_pgrp_changed_hook) }\
+		 PROVIDE(__stop__hurd_pgrp_changed_hook = .);\
+		 PROVIDE(__start__hurd_preinit_hook = .);\
+		 _hurd_preinit_hook : { *(_hurd_preinit_hook) }\
+		 PROVIDE(__stop__hurd_preinit_hook = .);\
+		 PROVIDE(__start__hurd_fork_prepare_hook = .);\
+		 _hurd_fork_prepare_hook : { *(_hurd_fork_prepare_hook) }\
+		 PROVIDE(__stop__hurd_fork_prepare_hook = .);\
+		 PROVIDE(__start__hurd_fork_setup_hook = .);\
+		 _hurd_fork_setup_hook : { *(_hurd_fork_setup_hook) }\
+		 PROVIDE(__stop__hurd_fork_setup_hook = .);\
+		 PROVIDE(__start__hurd_fork_child_hook = .);\
+		 _hurd_fork_child_hook : { *(_hurd_fork_child_hook) }\
+		 PROVIDE(__stop__hurd_fork_child_hook = .);\
+		 PROVIDE(__start__hurd_fork_parent_hook = .);\
+		 _hurd_fork_parent_hook : { *(_hurd_fork_parent_hook) }\
+		 PROVIDE(__stop__hurd_fork_parent_hook = .);\
+		 PROVIDE(__start__hurd_fork_locks = .);\
+		 _hurd_fork_locks : { *(_hurd_fork_locks) }\
+		 PROVIDE(__stop__hurd_fork_locks = .);\
+		 PROVIDE(__start___pthread_init = .);\
+		 __pthread_init : { *(__pthread_init) }\
+		 PROVIDE(__stop___pthread_init = .);\
 		 /DISCARD/ : { *(.gnu.glibc-stub.*) }@'
 	test -s $@T
 	mv -f $@T $@
@@ -778,6 +817,9 @@ ifeq ($(build-shared),yes)
 $(common-objpfx)libc.so: $(common-objpfx)libc.map
 endif
 common-generated += libc.so libc_pic.os
+ifndef subdir
+install-extras := soinit.o sofini.o
+endif
 ifdef libc.so-version
 $(common-objpfx)libc.so$(libc.so-version): $(common-objpfx)libc.so
 	$(make-link)
@@ -1009,6 +1051,7 @@ endef
 installed-libcs := $(foreach o,$(filter-out .os,$(object-suffixes-for-libc)),\
 			     $(inst_libdir)/$(patsubst %,$(libtype$o),\
 						     $(libprefix)$(libc-name)))
+installed-libcs := $(installed-libcs) $(inst_libdir)/libc_pic.a
 
 .PHONY: check-install-supported
 check-install-supported:
@@ -1056,6 +1099,22 @@ versioned := $(strip $(foreach so,$(install-lib.so),\
 
 install-lib.so-versioned := $(filter $(versioned), $(install-lib.so))
 install-lib.so-unversioned := $(filter-out $(versioned), $(install-lib.so))
+
+# Install the _pic.a files for versioned libraries, and corresponding
+# .map files.
+# libpthread_pic.a breaks mklibs, so don't install it and its map.
+install-lib := $(install-lib) $(install-lib.so-versioned:%.so=%_pic.a)
+install-lib := $(filter-out libpthread_pic.a,$(install-lib))
+# Despite having a soname libhurduser and libmachuser do not use symbol
+# versioning, so don't install the corresponding .map files.
+ifeq ($(build-shared),yes)
+install-map := $(patsubst %.so,%.map,\
+			$(foreach L,$(install-lib.so-versioned),$(notdir $L)))
+install-map := $(filter-out libhurduser.map libmachuser.map libpthread.map,$(install-map))
+ifndef subdir
+install-map := $(install-map) libc.map
+endif
+endif
 
 # For versioned libraries, we install three files:
 #	$(inst_libdir)/libfoo.so	-- for linking, symlink or ld script
@@ -1168,8 +1227,11 @@ $(inst_libdir)/libc.so: $(common-objpfx)format.lds \
 	 cat $<; \
 	 echo 'GROUP ( $(slibdir)/libc.so$(libc.so-version)' \
 	      '$(libdir)/$(patsubst %,$(libtype.oS),$(libprefix)$(libc-name))'\
-	      ' AS_NEEDED (' $(rtlddir)/$(rtld-installed-name) ') )' \
+	      ' AS_NEEDED (' $(slibdir)/$(rtld-installed-name) ') )' \
 	) > $@.new
+ifeq ($(patsubst gnu%,,$(config-os)),)
+	echo 'INPUT ( AS_NEEDED ( -lmachuser -lhurduser ) )' >> $@.new
+endif
 	mv -f $@.new $@
 
 endif
@@ -1311,9 +1373,22 @@ $(addprefix $(inst_includedir)/,$(headers-nonh)): $(inst_includedir)/%: \
 endif	# headers-nonh
 endif	# headers
 
+ifdef install-map
+$(addprefix $(inst_libdir)/,$(patsubst lib%.map,lib%_pic.map,$(install-map))): \
+  $(inst_libdir)/lib%_pic.map: $(common-objpfx)lib%.map $(+force)
+	$(do-install)
+endif
+
+ifdef install-extras
+$(addprefix $(inst_libdir)/libc_pic/,$(install-extras)): \
+  $(inst_libdir)/libc_pic/%.o: $(elf-objpfx)/%.os $(+force)
+	$(do-install)
+endif
+
 .PHONY: install-bin-nosubdir install-bin-script-nosubdir \
 	install-rootsbin-nosubdir install-sbin-nosubdir install-lib-nosubdir \
-	install-data-nosubdir install-headers-nosubdir
+	install-data-nosubdir install-headers-nosubdir install-map-nosubdir \
+	install-extras-nosubdir
 install-bin-nosubdir: $(addprefix $(inst_bindir)/,$(install-bin))
 install-bin-script-nosubdir: $(addprefix $(inst_bindir)/,$(install-bin-script))
 install-rootsbin-nosubdir: \
@@ -1326,6 +1401,10 @@ install-data-nosubdir: $(addprefix $(inst_datadir)/,$(install-data))
 install-headers-nosubdir: $(addprefix $(inst_includedir)/,$(headers))
 install-others-nosubdir: $(install-others)
 install-others-programs-nosubdir: $(install-others-programs)
+install-map-nosubdir: $(addprefix $(inst_libdir)/,\
+		       $(patsubst lib%.map,lib%_pic.map,$(install-map)))
+install-extras-nosubdir: $(addprefix $(inst_libdir)/libc_pic/,\
+		       $(install-extras))
 
 # We need all the `-nosubdir' targets so that `install' in the parent
 # doesn't depend on several things which each iterate over the subdirs.
@@ -1335,7 +1414,8 @@ install-%:: install-%-nosubdir ;
 
 .PHONY: install install-no-libc.a-nosubdir
 install-no-libc.a-nosubdir: install-headers-nosubdir install-data-nosubdir \
-			    install-lib-nosubdir install-others-nosubdir
+			    install-lib-nosubdir install-others-nosubdir \
+			    install-map-nosubdir install-extras-nosubdir
 ifeq ($(build-programs),yes)
 install-no-libc.a-nosubdir: install-bin-nosubdir install-bin-script-nosubdir \
 			    install-rootsbin-nosubdir install-sbin-nosubdir \

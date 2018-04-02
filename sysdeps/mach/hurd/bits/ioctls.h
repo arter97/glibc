@@ -272,17 +272,21 @@ enum __ioctl_datum { IOC_8, IOC_16, IOC_32, IOC_64 };
 #define	FIOSETOWN	_IOW('f', 124, int)	/* set owner */
 #define	FIOGETOWN	_IOR('f', 123, int)	/* get owner */
 
+#if 0
 /* socket i/o controls */
 #define	SIOCSHIWAT	_IOW('s',  0, int)		/* set high watermark */
 #define	SIOCGHIWAT	_IOR('s',  1, int)		/* get high watermark */
 #define	SIOCSLOWAT	_IOW('s',  2, int)		/* set low watermark */
 #define	SIOCGLOWAT	_IOR('s',  3, int)		/* get low watermark */
+#endif
 #define	SIOCATMARK	_IOR('s',  7, int)		/* at oob mark? */
 #define	SIOCSPGRP	_IOW('s',  8, int)		/* set process group */
 #define	SIOCGPGRP	_IOR('s',  9, int)		/* get process group */
 
+#if 0
 #define	SIOCADDRT	_IOW('r', 10, struct ortentry)	/* add route */
 #define	SIOCDELRT	_IOW('r', 11, struct ortentry)	/* delete route */
+#endif
 
 #define	SIOCSIFADDR	_IOW('i', 12, struct ifreq)	/* set ifnet address */
 #define	OSIOCGIFADDR	_IOWR('i',13, struct ifreq)	/* get ifnet address */
@@ -304,12 +308,16 @@ enum __ioctl_datum { IOC_8, IOC_16, IOC_32, IOC_64 };
 #define	SIOCGIFMETRIC	_IOWR('i',23, struct ifreq_int)	/* get IF metric */
 #define	SIOCSIFMETRIC	_IOW('i',24, struct ifreq_int)	/* set IF metric */
 #define	SIOCDIFADDR	_IOW('i',25, struct ifreq)	/* delete IF addr */
+#if 0
 #define	SIOCAIFADDR	_IOW('i',26, struct ifaliasreq)	/* add/chg IF alias */
+#endif
 
+#if 0
 #define	SIOCSARP	_IOW('i', 30, struct arpreq)	/* set arp entry */
 #define	OSIOCGARP	_IOWR('i',31, struct arpreq)	/* get arp entry */
 #define	SIOCGARP	_IOWR('i',38, struct arpreq)	/* get arp entry */
 #define	SIOCDARP	_IOW('i', 32, struct arpreq)	/* delete arp entry */
+#endif
 
 #define SIOCGIFMTU	_IOWR('i', 51, struct ifreq_int)/* get IF mtu */
 #define SIOCSIFMTU	_IOW('i', 52, struct ifreq_int)	/* set IF mtu */
@@ -330,7 +338,9 @@ enum __ioctl_datum { IOC_8, IOC_16, IOC_32, IOC_64 };
 # define OTIOCGETD	_IOR('t', 0, int)	/* get line discipline */
 # define OTIOCSETD	_IOW('t', 1, int)	/* set line discipline */
 #endif
+#if 0
 #define	TIOCHPCL	_IO('t', 2)		/* hang up on last close */
+#endif
 #define	TIOCGETP	_IOR('t', 8,struct sgttyb)/* get parameters -- gtty */
 #define	TIOCSETP	_IOW('t', 9,struct sgttyb)/* set parameters -- stty */
 #define	TIOCSETN	_IOW('t',10,struct sgttyb)/* as above, but no flushtty*/
@@ -383,10 +393,12 @@ enum __ioctl_datum { IOC_8, IOC_16, IOC_32, IOC_64 };
 #define		PENDIN		0x20000000	/* tp->t_rawq needs reread */
 #define		DECCTQ		0x40000000	/* only ^Q starts after ^S */
 #define		NOFLSH		0x80000000	/* no output flush on signal */
+#if 0
 #define	TIOCLBIS	_IOW('t', 127, int)	/* bis local mode bits */
 #define	TIOCLBIC	_IOW('t', 126, int)	/* bic local mode bits */
 #define	TIOCLSET	_IOW('t', 125, int)	/* set entire local mode word */
 #define	TIOCLGET	_IOR('t', 124, int)	/* get local modes */
+#endif
 #define		LCRTBS		(CRTBS>>16)
 #define		LPRTERA		(PRTERA>>16)
 #define		LCRTERA		(CRTERA>>16)
@@ -402,12 +414,14 @@ enum __ioctl_datum { IOC_8, IOC_16, IOC_32, IOC_64 };
 #define		LPENDIN		(PENDIN>>16)
 #define		LDECCTQ		(DECCTQ>>16)
 #define		LNOFLSH		(NOFLSH>>16)
+#if 0
 #define	TIOCSLTC	_IOW('t',117,struct ltchars)/* set local special chars*/
 #define	TIOCGLTC	_IOR('t',116,struct ltchars)/* get local special chars*/
 #define OTIOCCONS	_IO('t', 98)	/* for hp300 -- sans int arg */
 #define	OTTYDISC	0
 #define	NETLDISC	1
 #define	NTTYDISC	2
+#endif
 
 /* From 4.4 <sys/ttydev.h>.   */
 #ifdef USE_OLD_TTY

@@ -1,3 +1,60 @@
+2018-02-19  Rical Jasan  <ricaljasan@pacific.net>
+
+	[BZ #6889]
+	* manual/filesys.texi (get_current_dir_name): Clarify behaviour.
+
+2018-02-16  Rical Jasan  <ricaljasan@pacific.net>
+
+	* manual/platform.texi (__riscv_flush_icache): Fix @deftypefun
+	syntax.
+
+2018-02-09  Rical Jasan  <ricaljasan@pacific.net>
+
+	* manual/creature.texi: Convert references to gcc.info to gcc.
+	* manual/stdio.texi: Likewise.
+	* manual/string.texi: Likewise.
+
+2018-02-18  Aurelien Jarno  <aurelien@aurel32.net>
+
+	[BZ #22818]
+	* posix/tst-glob_lstat_compat.c [__alpha__] (glob): Access
+	the GLIBC_2.1 version.
+
+2018-02-02  Sean McKean  <smckean83@gmail.com>
+
+	[BZ #22735]
+	* time/time.h (clock): Reference CLOCKS_PER_SEC in comment.
+
+2018-02-10  Dmitry V. Levin  <ldv@altlinux.org>
+
+	[BZ #22433]
+	* sysdeps/unix/sysv/linux/aarch64/sys/ptrace.h (__ptrace_request):
+	Remove arm-specific PTRACE_GET_THREAD_AREA, PTRACE_GETHBPREGS,
+	and PTRACE_SETHBPREGS.
+
+2018-02-14  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	* sysdeps/sh/libm-test-ulps: Update.
+
+2018-02-09  DJ Delorie  <dj@redhat.com>
+
+	[BZ #22827]
+	* sysdeps/unix/sysv/linux/riscv/readelflib.c (process_elf_file): Use
+	64-bit ELF type for 64-bit ELF objects.
+
+2018-02-07  Igor Gnatenko  <ignatenko@redhat.com>
+
+	[BZ #22797]
+	* sysdeps/unix/sysv/linux/bits/mman-shared.h (pkey_get): Add
+	missing second underscore to parameter name.
+
+2018-02-05  H.J. Lu  <hongjiu.lu@intel.com>
+
+	[BZ #22638]
+	* sysdeps/sparc/sparc32/start.S (_start): Check PIC instead of
+	SHARED.
+	* sysdeps/sparc/sparc64/start.S (_start): Likewise.
+
 2018-02-01  Dmitry V. Levin  <ldv@altlinux.org>
 
 	* version.h (RELEASE): Set to "stable".
@@ -710,7 +767,9 @@
 2018-01-18  Arjun Shankar  <arjun@redhat.com>
 
 	[BZ #22343]
+	[BZ #22774]
 	CVE-2018-6485
+	CVE-2018-6551
 	* malloc/malloc.c (checked_request2size): call REQUEST_OUT_OF_RANGE
 	after padding.
 	(_int_memalign): check for integer overflow before calling

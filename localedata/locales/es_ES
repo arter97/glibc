@@ -53,6 +53,18 @@ END LC_IDENTIFICATION
 LC_COLLATE
 % Copy the template from ISO/IEC 14651
 copy "iso14651_t1"
+
+collating-symbol  <ntilde>
+
+reorder-after <n>
+<ntilde>
+
+reorder-after <U006E>
+<U00F1> <ntilde>;<TIL>;<MIN>;IGNORE
+reorder-after <U004E>
+<U00D1> <ntilde>;<TIL>;<CAP>;IGNORE
+
+reorder-end
 END LC_COLLATE
 
 LC_CTYPE

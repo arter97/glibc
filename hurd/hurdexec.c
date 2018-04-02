@@ -25,8 +25,11 @@
 #include <hurd/fd.h>
 #include <hurd/signal.h>
 #include <hurd/id.h>
+#include <hurd/fs_experimental.h>
 #include <assert.h>
 #include <argz.h>
+
+#include <shlib-compat.h>
 
 /* Overlay TASK, executing FILE with arguments ARGV and environment ENVP.
    If TASK == mach_task_self (), some ports are dealloc'd by the exec server.
@@ -37,6 +40,13 @@ _hurd_exec (task_t task, file_t file,
 	    char *const argv[], char *const envp[])
 {
   return _hurd_exec_paths (task, file, NULL, NULL, argv, envp);
+}
+
+error_t
+__hurd_exec_file_name (task_t task, file_t file, const char *filename,
+	    char *const argv[], char *const envp[])
+{
+  return _hurd_exec_paths (task, file, filename, filename, argv, envp);
 }
 
 link_warning (_hurd_exec,
@@ -123,15 +133,15 @@ _hurd_exec_paths (task_t task, file_t file,
 
   ss = _hurd_self_sigstate ();
 
-  assert (! __spin_lock_locked (&ss->critical_section_lock));
   __spin_lock (&ss->critical_section_lock);
 
-  __spin_lock (&ss->lock);
+  _hurd_sigstate_lock (ss);
+  struct sigaction *actions = _hurd_sigstate_actions (ss);
   ints[INIT_SIGMASK] = ss->blocked;
-  ints[INIT_SIGPENDING] = ss->pending;
+  ints[INIT_SIGPENDING] = _hurd_sigstate_pending (ss);
   ints[INIT_SIGIGN] = 0;
   for (i = 1; i < NSIG; ++i)
-    if (ss->actions[i].sa_handler == SIG_IGN)
+    if (actions[i].sa_handler == SIG_IGN)
       ints[INIT_SIGIGN] |= __sigmask (i);
 
   /* We hold the sigstate lock until the exec has failed so that no signal
@@ -142,7 +152,7 @@ _hurd_exec_paths (task_t task, file_t file,
      critical section flag avoids anything we call trying to acquire the
      sigstate lock.  */
 
-  __spin_unlock (&ss->lock);
+  _hurd_sigstate_unlock (ss);
 
   /* Pack up the descriptor table to give the new program.  */
   __mutex_lock (&_hurd_dtable_lock);
@@ -393,6 +403,19 @@ _hurd_exec_paths (task_t task, file_t file,
       /* Fall back for backwards compatibility.  This can just be removed
          when __file_exec goes away.  */
       if (err == MIG_BAD_ID)
+	err = __file_exec_file_name (file, task, flags,
+				    path ? path : "",
+				    args, argslen, env, envlen,
+				    dtable, MACH_MSG_TYPE_COPY_SEND, dtablesize,
+				    ports, MACH_MSG_TYPE_COPY_SEND,
+				    _hurd_nports,
+				    ints, INIT_INT_MAX,
+				    please_dealloc, pdp - please_dealloc,
+				    &_hurd_msgport,
+				    task == __mach_task_self () ? 1 : 0);
+      /* Fall back for backwards compatibility.  This can just be removed
+         when __file_exec goes away.  */
+      if (err == MIG_BAD_ID)
 	err = __file_exec (file, task, flags,
 			   args, argslen, env, envlen,
 			   dtable, MACH_MSG_TYPE_COPY_SEND, dtablesize,
@@ -435,3 +458,12 @@ _hurd_exec_paths (task_t task, file_t file,
   free (env);
   return err;
 }
+#if SHLIB_COMPAT (libc, GLIBC_2_26, GLIBC_2_27)
+compat_symbol (libc, _hurd_exec_paths, _hurd_exec_paths, GLIBC_2_26);
+#endif
+extern error_t _hurd_exec_file_name (task_t task,
+				     file_t file,
+				     const char *filename,
+				     char *const argv[],
+				     char *const envp[]);
+versioned_symbol (libc, __hurd_exec_file_name, _hurd_exec_file_name, GLIBC_2_21);

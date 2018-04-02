@@ -52,13 +52,8 @@ __libc_sigaction (int sig, const struct sigaction *act, struct sigaction *oact)
       memcpy (&kact.sa_mask, &act->sa_mask, sizeof (sigset_t));
       kact.sa_flags = act->sa_flags;
 #ifdef HAVE_SA_RESTORER
-      if (kact.sa_flags & SA_RESTORER)
-	kact.sa_restorer = act->sa_restorer;
-      else
-	{
-	  kact.sa_restorer = choose_restorer (kact.sa_flags);
-	  kact.sa_flags |= SA_RESTORER;
-	}
+      kact.sa_restorer = choose_restorer (kact.sa_flags);
+      kact.sa_flags |= SA_RESTORER;
 #endif
     }
 

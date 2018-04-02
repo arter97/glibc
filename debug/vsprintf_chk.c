@@ -72,7 +72,6 @@ ___vsprintf_chk (char *s, int flags, size_t slen, const char *format,
 
   _IO_no_init (&f._sbf._f, _IO_USER_LOCK, -1, NULL, NULL);
   _IO_JUMPS (&f._sbf) = &_IO_str_chk_jumps;
-  s[0] = '\0';
   _IO_str_init_static_internal (&f, s, slen - 1, s);
 
   /* For flags > 0 (i.e. __USE_FORTIFY_LEVEL > 1) request that %n

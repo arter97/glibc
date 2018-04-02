@@ -88,7 +88,7 @@ $(common-objpfx)errnos.d: $(mach-errnos-deps)
 	    -e 's, \.\./, $(..),g' > $@t
 	mv -f $@t $@
 
-$(hurd)/bits/errno.h: $(common-objpfx)stamp-errnos ;
+$(hurd)/bits/errno-disabled.h: $(common-objpfx)stamp-errnos ;
 $(common-objpfx)stamp-errnos: $(hurd)/errnos.awk $(errno.texinfo) \
 			      $(mach-errnos-deps) $(common-objpfx)errnos.d
 	$(AWK) -f $^ > $(hurd)/bits/errno.h-tmp
@@ -168,6 +168,10 @@ ifeq (elf,$(subdir))
 $(objpfx)librtld.map: $(rpcuserlibs:.so=_pic.a)
 
 CFLAGS-dl-load.c = -DEXTERNAL_MAP_FROM_FD
+endif
+
+ifeq ($(subdir),posix)
+CFLAGS-confstr.c += -DLIBPTHREAD_VERSION='"libpthread 0.3"'
 endif
 
 # Override the generic Makeconfig values so we link against the RPC libs.

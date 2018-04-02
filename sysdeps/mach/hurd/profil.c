@@ -70,6 +70,8 @@ update_waiter (u_short *sample_buffer, size_t size, size_t offset, u_int scale)
       if (! err)
 	err = __mach_setup_thread (__mach_task_self (), profile_thread,
 				   &profile_waiter, NULL, NULL);
+      if (! err)
+	err = __mach_setup_tls(profile_thread);
     }
   else
     err = 0;
@@ -141,7 +143,7 @@ weak_alias (__profil, profil)
 static volatile error_t special_profil_failure;
 
 /* Fetch PC samples.  This function must be very careful not to depend
-   on Hurd threadvar variables.  We arrange that by using a special
+   on Hurd TLS variables.  We arrange that by using a special
    stub arranged for at the end of this file. */
 static void
 fetch_samples (void)
@@ -176,7 +178,7 @@ fetch_samples (void)
 }
 
 
-/* This function must be very careful not to depend on Hurd threadvar
+/* This function must be very careful not to depend on Hurd TLS
    variables.  We arrange that by using special stubs arranged for at the
    end of this file. */
 static void
@@ -267,7 +269,7 @@ text_set_element (_hurd_fork_child_hook, fork_profil_child);
    are fatal in profile_waiter anyhow. */
 #define __mig_put_reply_port(foo)
 
-/* Use our static variable instead of the usual threadvar mechanism for
+/* Use our static variable instead of the usual TLS mechanism for
    this. */
 #define __mig_get_reply_port() profil_reply_port
 

@@ -1,1 +1,3 @@
 mach/hurd/x86
+../libpthread/sysdeps/mach/hurd/i386
+../libpthread/sysdeps/i386

@@ -29,16 +29,17 @@ libc {
     mach_msg_send; mach_msg_receive;
     mach_msg_server; mach_msg_server_timeout;
     mach_open_devstream;
-    mach_port_allocate; mach_port_allocate_name; mach_port_deallocate;
-    mach_port_insert_right; mach_reply_port;
+    mach_port_allocate; __mach_port_allocate;
+    mach_port_allocate_name; mach_port_deallocate;
+    mach_port_insert_right; __mach_port_insert_right; mach_reply_port;
     mach_setup_thread;
     mach_task_self;
     mach_thread_self;
     mig_allocate; mig_dealloc_reply_port; mig_deallocate;
-    mig_get_reply_port; mig_init; mig_put_reply_port;
+    mig_get_reply_port; mig_init; __mig_init; mig_put_reply_port;
 
     # v*
-    vm_allocate; vm_deallocate; vm_map;
+    vm_allocate; __vm_allocate; vm_deallocate; __vm_deallocate; vm_map;
 
     # s*
     swtch; swtch_pri;
@@ -56,6 +57,7 @@ libc {
   }
   GLIBC_2.21 {
     __mach_host_self_;
+    mach_print;
   }
 
   HURD_CTHREADS_0.3 {

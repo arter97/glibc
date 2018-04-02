@@ -24,6 +24,36 @@ register int *sp asm ("%esp");
 #include <stdlib.h>
 #include <string.h>
 
+/* This is run on the thread stack after restoring it, to be able to
+   unlock SS off sigstack.  */
+static void
+__sigreturn2 (int *usp)
+{
+  struct hurd_sigstate *ss = _hurd_self_sigstate ();
+  _hurd_sigstate_unlock (ss);
+
+  sp = usp;
+#define A(line) asm volatile (#line)
+  /* The members in the sigcontext are arranged in this order
+     so we can pop them easily.  */
+
+  /* Pop the segment registers (except %cs and %ss, done last).  */
+  A (popl %gs);
+  A (popl %fs);
+  A (popl %es);
+  A (popl %ds);
+  /* Pop the general registers.  */
+  A (popa);
+  /* Pop the processor flags.  */
+  A (popf);
+  /* Return to the saved PC.  */
+  A (ret);
+
+  /* Firewall.  */
+  A (hlt);
+#undef A
+}
+
 int
 __sigreturn (struct sigcontext *scp)
 {
@@ -38,7 +68,7 @@ __sigreturn (struct sigcontext *scp)
     }
 
   ss = _hurd_self_sigstate ();
-  __spin_lock (&ss->lock);
+  _hurd_sigstate_lock (ss);
 
   /* Remove the link on the `active resources' chain added by
      _hurd_setup_sighandler.  Its purpose was to make sure
@@ -50,35 +80,28 @@ __sigreturn (struct sigcontext *scp)
   ss->intr_port = scp->sc_intr_port;
 
   /* Check for pending signals that were blocked by the old set.  */
-  if (ss->pending & ~ss->blocked)
+  if (_hurd_sigstate_pending (ss) & ~ss->blocked)
     {
       /* There are pending signals that just became unblocked.  Wake up the
 	 signal thread to deliver them.  But first, squirrel away SCP where
 	 the signal thread will notice it if it runs another handler, and
 	 arrange to have us called over again in the new reality.  */
       ss->context = scp;
-      __spin_unlock (&ss->lock);
+      _hurd_sigstate_unlock (ss);
       __msg_sig_post (_hurd_msgport, 0, 0, __mach_task_self ());
       /* If a pending signal was handled, sig_post never returned.
 	 If it did return, the pending signal didn't run a handler;
 	 proceed as usual.  */
-      __spin_lock (&ss->lock);
+      _hurd_sigstate_lock (ss);
       ss->context = NULL;
     }
 
   if (scp->sc_onstack)
-    {
-      ss->sigaltstack.ss_flags &= ~SS_ONSTACK; /* XXX threadvars */
-      /* XXX cannot unlock until off sigstack */
-      abort ();
-    }
-  else
-    __spin_unlock (&ss->lock);
+    ss->sigaltstack.ss_flags &= ~SS_ONSTACK;
 
   /* Destroy the MiG reply port used by the signal handler, and restore the
      reply port in use by the thread when interrupted.  */
-  reply_port =
-    (mach_port_t *) __hurd_threadvar_location (_HURD_THREADVAR_MIG_REPLY);
+  reply_port = &__hurd_local_reply_port;
   if (*reply_port)
     {
       mach_port_t port = *reply_port;
@@ -109,27 +132,19 @@ __sigreturn (struct sigcontext *scp)
     *--usp = scp->sc_efl;
     memcpy (usp -= 12, &scp->sc_i386_thread_state, 12 * sizeof (int));
 
+    /* Pass usp to __sigreturn2 so it can unwind itself easily.  */
+    *(usp-1) = (int) usp;
+    --usp;
+    /* Bogus return address for __sigreturn2 */
+    *--usp = 0;
+    *--usp = (int) __sigreturn2;
+
+    /* Restore thread stack */
     sp = usp;
-
-#define A(line) asm volatile (#line)
-    /* The members in the sigcontext are arranged in this order
-       so we can pop them easily.  */
-
-    /* Pop the segment registers (except %cs and %ss, done last).  */
-    A (popl %gs);
-    A (popl %fs);
-    A (popl %es);
-    A (popl %ds);
-    /* Pop the general registers.  */
-    A (popa);
-    /* Pop the processor flags.  */
-    A (popf);
-    /* Return to the saved PC.  */
-    A (ret);
-
+    /* Return into __sigreturn2.  */
+    asm volatile ("ret");
     /* Firewall.  */
-    A (hlt);
-#undef A
+    asm volatile ("hlt");
   }
 
   /* NOTREACHED */

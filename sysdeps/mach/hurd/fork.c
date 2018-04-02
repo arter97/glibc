@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <hurd.h>
 #include <hurd/signal.h>
+#include <hurd/threadvar.h>
 #include <setjmp.h>
 #include <thread_state.h>
 #include <sysdep.h>		/* For stack growth direction.  */
@@ -443,6 +444,7 @@ __fork (void)
 	  (err = __mach_port_insert_right (newtask, ss->thread,
 					   thread, MACH_MSG_TYPE_COPY_SEND)))
 	LOSE;
+      /* XXX consumed? (_hurd_sigthread is no more) */
       if (thread_refs > 1 &&
 	  (err = __mach_port_mod_refs (newtask, ss->thread,
 				       MACH_PORT_RIGHT_SEND,
@@ -483,19 +485,17 @@ __fork (void)
 				    (natural_t *) &state, &statecount))
 	LOSE;
 #ifdef STACK_GROWTH_UP
-#define THREADVAR_SPACE (__hurd_threadvar_max \
-			 * sizeof *__hurd_sightread_variables)
       if (__hurd_sigthread_stack_base == 0)
 	{
 	  state.SP &= __hurd_threadvar_stack_mask;
-	  state.SP += __hurd_threadvar_stack_offset + THREADVAR_SPACE;
+	  state.SP += __hurd_threadvar_stack_offset;
 	}
       else
 	state.SP = __hurd_sigthread_stack_base;
 #else
       if (__hurd_sigthread_stack_end == 0)
 	{
-	  /* The signal thread has a normal stack assigned by cthreads.
+	  /* The signal thread has a stack assigned by cthreads.
 	     The threadvar_stack variables conveniently tell us how
 	     to get to the highest address in the stack, just below
 	     the per-thread variables.  */
@@ -507,6 +507,11 @@ __fork (void)
 #endif
       MACHINE_THREAD_STATE_SET_PC (&state,
 				   (unsigned long int) _hurd_msgport_receive);
+
+      /* Do special thread setup for TLS if needed.  */
+      if (err = _hurd_tls_fork (sigthread, _hurd_msgport_thread, &state))
+	LOSE;
+
       if (err = __thread_set_state (sigthread, MACHINE_THREAD_STATE_FLAVOR,
 				    (natural_t *) &state, statecount))
 	LOSE;
@@ -517,7 +522,7 @@ __fork (void)
       _hurd_longjmp_thread_state (&state, env, 1);
 
       /* Do special thread setup for TLS if needed.  */
-      if (err = _hurd_tls_fork (thread, &state))
+      if (err = _hurd_tls_fork (thread, ss->thread, &state))
 	LOSE;
 
       if (err = __thread_set_state (thread, MACHINE_THREAD_STATE_FLAVOR,
@@ -604,10 +609,6 @@ __fork (void)
       for (i = 0; i < _hurd_nports; ++i)
 	__spin_unlock (&_hurd_ports[i].lock);
 
-      /* We are one of the (exactly) two threads in this new task, we
-	 will take the task-global signals.  */
-      _hurd_sigthread = ss->thread;
-
       /* Claim our sigstate structure and unchain the rest: the
 	 threads existed in the parent task but don't exist in this
 	 task (the child process).  Delay freeing them until later
@@ -627,6 +628,25 @@ __fork (void)
       ss->next = NULL;
       _hurd_sigstates = ss;
       __mutex_unlock (&_hurd_siglock);
+      /* Earlier on, the global sigstate may have been tainted and now needs to
+         be reinitialized.  Nobody is interested in its present state anymore:
+         we're not, the signal thread will be restarted, and there are no other
+         threads.
+
+         We can't simply allocate a fresh global sigstate here, as
+         _hurd_thread_sigstate will call malloc and that will deadlock trying
+         to determine the current thread's sigstate.  */
+#if 0
+      _hurd_thread_sigstate_init (_hurd_global_sigstate, MACH_PORT_NULL);
+#else
+      /* Only reinitialize the lock -- otherwise we might have to do additional
+         setup as done in hurdsig.c:_hurdsig_init.  */
+      __spin_lock_init (&_hurd_global_sigstate->lock);
+#endif
+
+      /* We are one of the (exactly) two threads in this new task, we
+	 will take the task-global signals.  */
+      _hurd_sigstate_set_global_rcv (ss);
 
       /* Fetch our new process IDs from the proc server.  No need to
 	 refetch our pgrp; it is always inherited from the parent (so
@@ -635,8 +655,10 @@ __fork (void)
       err = __USEPORT (PROC, __proc_getpids (port, &_hurd_pid, &_hurd_ppid,
 					     &_hurd_orphaned));
 
-      /* Forking clears the trace flag.  */
+      /* Forking clears the trace flag and pending masks.  */
       __sigemptyset (&_hurdsig_traced);
+      __sigemptyset (&_hurd_global_sigstate->pending);
+      __sigemptyset (&ss->pending);
 
       /* Release malloc locks.  */
       _hurd_malloc_fork_child ();

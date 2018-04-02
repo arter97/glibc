@@ -453,6 +453,18 @@ AC_ARG_ENABLE([mathvec],
 	      [build_mathvec=$enableval],
 	      [build_mathvec=notset])
 
+# The abi-tags file uses a fairly simplistic model for name recognition that
+# can't distinguish i486-pc-linux-gnu fully from i486-pc-gnu.  So we mutate a
+# $host_os of `gnu*' here to be `gnu-gnu*' just so that it can tell.
+# This doesn't get used much beyond that, so it's fairly safe.
+case "$host_os" in
+linux*)
+  ;;
+gnu*)
+  host_os=`echo $host_os | sed -e 's/gnu/gnu-gnu/'`
+  ;;
+esac
+
 # We keep the original values in `$config_*' and never modify them, so we
 # can write them unchanged into config.make.  Everything else uses
 # $machine, $vendor, and $os, and changes them whenever convenient.
@@ -504,7 +516,7 @@ LIBC_PRECONFIGURE([$srcdir], [for sysdeps])
 ###
 if test -z "$enable_hacker_mode" && test x"$libc_config_ok" != xyes; then
   case "$machine-$host_os" in
-  *-linux* | *-gnu*)
+  *-linux* | *-gnu* | *-kfreebsd*)
     ;;
   *)
     AC_MSG_ERROR([
@@ -708,6 +720,8 @@ gnu*)
   base_os=mach/hurd ;;
 linux*)
   base_os=unix/sysv ;;
+k*bsd*)
+  base_os=unix/bsd/bsd4.4 ;;
 esac
 
 # For sunos4.1.1, try sunos4.1.1, then sunos4.1, then sunos4, then sunos.

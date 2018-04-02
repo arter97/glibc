@@ -70,7 +70,7 @@ _hurdsig_fault_catch_exception_raise (mach_port_t port,
      codes into a signal number and subcode.  */
   _hurd_exception2signal (&d, &signo);
 
-  return HURD_PREEMPT_SIGNAL_P (&_hurdsig_fault_preemptor, signo, d.code)
+  return HURD_PREEMPT_SIGNAL_P (&_hurdsig_fault_preemptor, signo, d.exc_subcode)
     ? 0 : EGREGIOUS;
 }
 
@@ -204,6 +204,8 @@ _hurdsig_fault_init (void)
   /* This state will be restored when we fault.
      It runs the function above.  */
   memset (&state, 0, sizeof state);
+
+  MACHINE_THREAD_STATE_FIX_NEW (&state);
   MACHINE_THREAD_STATE_SET_PC (&state, faulted);
   MACHINE_THREAD_STATE_SET_SP (&state, faultstack, sizeof faultstack);
 

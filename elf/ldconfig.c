@@ -59,6 +59,21 @@
 
 #define PACKAGE _libc_intl_domainname
 
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
+
+/* Get the generated information about the trusted/standard directories.  */
+#include "trusted-dirs.h"
+
+static const char system_dirs[] = SYSTEM_DIRS;
+static const size_t system_dirs_len[] =
+{
+  SYSTEM_DIRS_LEN
+};
+#define nsystem_dirs_len \
+  (sizeof (system_dirs_len) / sizeof (system_dirs_len[0]))
+
 static const struct
 {
   const char *name;
@@ -451,6 +466,25 @@ chroot_stat (const char *real_path, const char *path, struct stat64 *st)
   return ret;
 }
 
+static const char * const ld_sonames[] =
+{
+  "ld-kfreebsd-x86-64.so.1",
+  "ld-linux-aarch64.so.1",
+  "ld-linux-aarch64_be.so.1",
+  "ld-linux-armhf.so.3",
+  "ld-linux-ia64.so.2",
+  "ld-linux-mipsn8.so.1",
+  "ld-linux-riscv64-lp64.so.1"
+  "ld-linux-riscv64-lp64d.so.1"
+  "ld-linux-x32.so.2",
+  "ld-linux-x86-64.so.2",
+  "ld-linux.so.2",
+  "ld-linux.so.3",
+  "ld.so.1",
+  "ld64.so.1",
+  "ld64.so.2",
+};
+
 /* Create a symbolic link from soname to libname in directory path.  */
 static void
 create_links (const char *real_path, const char *path, const char *libname,
@@ -461,6 +495,7 @@ create_links (const char *real_path, const char *path, const char *libname,
   struct stat64 stat_lib, stat_so, lstat_so;
   int do_link = 1;
   int do_remove = 1;
+  int i;
   /* XXX: The logics in this function should be simplified.  */
 
   /* Get complete path.  */
@@ -489,6 +524,18 @@ create_links (const char *real_path, const char *path, const char *libname,
 	  error (0, 0, _("Can't stat %s\n"), full_libname);
 	  return;
 	}
+
+      /* Do not change the symlink pointer to the dynamic linker except for
+	 non-existing symlinks, as it might break multiarch systems.  */
+      for (i = 0; i < sizeof (ld_sonames) / sizeof (ld_sonames[0]); i++)
+	if (__glibc_unlikely(!strcmp(soname, ld_sonames[i])))
+	  {
+	    if (opt_verbose)
+	      error (0, 0, _("%s is the dynamic linker, ignoring\n"),
+			     full_libname);
+	    do_link = 0;
+	  }
+
       if (stat_lib.st_dev == stat_so.st_dev
 	  && stat_lib.st_ino == stat_so.st_ino)
 	/* Link is already correct.  */
@@ -1079,9 +1126,10 @@ parse_conf (const char *filename, bool do_chroot)
 
   if (file == NULL)
     {
-      error (0, errno, _("\
+      if (strcmp(canon, LD_SO_CONF) != 0 || opt_verbose)
+       error (0, errno, _("\
 Warning: ignoring configuration file that cannot be opened: %s"),
-	     canon);
+	      canon);
       if (canon != filename)
 	free ((char *) canon);
       return;
@@ -1379,12 +1427,19 @@ main (int argc, char **argv)
 
   if (!opt_only_cline)
     {
+      const char *strp = system_dirs;
+      size_t idx = 0;
+
       parse_conf (config_file, true);
 
       /* Always add the standard search paths.  */
-      add_system_dir (SLIBDIR);
-      if (strcmp (SLIBDIR, LIBDIR))
-	add_system_dir (LIBDIR);
+      do
+        {
+          add_system_dir (strp);
+          strp += system_dirs_len[idx] + 1;
+          idx++;
+        }
+      while (idx < nsystem_dirs_len);
     }
 
   const char *aux_cache_file = _PATH_LDCONFIG_AUX_CACHE;

@@ -84,6 +84,10 @@ for header in "$@"; do
         (sys/elf.h)
             continue;;
 
+	# These are completely not following standards
+        (hurd.h | hurd/* | faultexc_server.h | mach.h | mach_init.h | mach_error.h | mach-shortcuts.h | mach/* | device/* | lock-intern.h | spin-lock.h | machine-sp.h)
+            continue;;
+
         # libio.h and _G_config.h are deprecation stubs containing #warnings
         # to use stdio.h instead.
         (libio.h | _G_config.h)

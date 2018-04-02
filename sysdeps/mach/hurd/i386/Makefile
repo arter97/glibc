@@ -14,3 +14,8 @@ shared-only-routines += divdi3
 CPPFLAGS-divdi3.c = -Din_divdi3_c
 endif
 endif
+
+ifeq ($(subdir),stdlib)
+gen-as-const-headers += ucontext_i.sym
+sysdep_routines += makecontext-helper
+endif

@@ -119,8 +119,8 @@ mon     "enero";/
 d_t_fmt "%a %d %b %Y %T %Z"
 d_fmt   "%d//%m//%y"
 t_fmt   "%T"
-am_pm   "";""
-t_fmt_ampm ""
+am_pm         "a.m.";"p.m."
+t_fmt_ampm    "%I:%M:%S %p"
 week 7;19971130;1
 END LC_TIME
 

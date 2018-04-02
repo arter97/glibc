@@ -111,7 +111,9 @@ enum __error_t_codes
   EILSEQ                         = 0x4000006a,	/* Invalid or incomplete multibyte or wide character */
   EBACKGROUND                    = 0x40000064,	/* Inappropriate operation for background process */
   EDIED                          = 0x40000065,	/* Translator died */
+#if 0
   ED                             = 0x40000066,	/* ? */
+#endif
   EGREGIOUS                      = 0x40000067,	/* You really blew it this time */
   EIEIO                          = 0x40000068,	/* Computer bought the farm */
   EGRATUITOUS                    = 0x40000069,	/* Gratuitous error */
@@ -127,6 +129,8 @@ enum __error_t_codes
   EPROTO                         = 0x40000074,	/* Protocol error */
   ETIME                          = 0x40000075,	/* Timer expired */
   ECANCELED                      = 0x40000077,	/* Operation canceled */
+  EOWNERDEAD                     = 0x40000078,	/* Robust mutex owner died */
+  ENOTRECOVERABLE                = 0x40000079,	/* Robust mutex irrecoverable */
 
 /* Errors from <mach/message.h>.  */
   EMACH_SEND_IN_PROGRESS         = 0x10000001,
@@ -314,7 +318,9 @@ typedef enum __error_t_codes error_t;
 #define EILSEQ                         0x4000006a
 #define EBACKGROUND                    0x40000064
 #define EDIED                          0x40000065
+#if 0
 #define ED                             0x40000066
+#endif
 #define EGREGIOUS                      0x40000067
 #define EIEIO                          0x40000068
 #define EGRATUITOUS                    0x40000069
@@ -330,6 +336,8 @@ typedef enum __error_t_codes error_t;
 #define EPROTO                         0x40000074
 #define ETIME                          0x40000075
 #define ECANCELED                      0x40000077
+#define EOWNERDEAD                     0x40000078
+#define ENOTRECOVERABLE                0x40000079
 
 /* Errors from <mach/message.h>.  */
 #define EMACH_SEND_IN_PROGRESS         0x10000001
@@ -413,6 +421,6 @@ typedef enum __error_t_codes error_t;
 #define ED_NO_MEMORY                   2508
 #define ED_READ_ONLY                   2509
 
-#define _HURD_ERRNOS 120
+#define _HURD_ERRNOS 122
 
 #endif /* bits/errno.h.  */

@@ -42,7 +42,7 @@ quantize_timeval (struct timeval *tv)
   static time_t quantum = -1;
 
   if (quantum == -1)
-    quantum = 1000000 / __getclktck ();
+    quantum = 100 / __getclktck ();
 
   tv->tv_usec = ((tv->tv_usec + (quantum - 1)) / quantum) * quantum;
   if (tv->tv_usec >= 1000000)
@@ -103,7 +103,7 @@ timer_thread (void)
 	  __msg_sig_post_request (_hurd_msgport,
 				  _hurd_itimer_port,
 				  MACH_MSG_TYPE_MAKE_SEND_ONCE,
-				  SIGALRM, 0, __mach_task_self ());
+				  SIGALRM, SI_TIMER, __mach_task_self ());
 	  break;
 
 	case MACH_RCV_INTERRUPTED:
@@ -128,7 +128,8 @@ timer_thread (void)
 
 /* Forward declaration.  */
 static int setitimer_locked (const struct itimerval *new,
-			     struct itimerval *old, void *crit);
+			     struct itimerval *old, void *crit,
+			     int hurd_siglocked);
 
 static sighandler_t
 restart_itimer (struct hurd_signal_preemptor *preemptor,
@@ -142,7 +143,7 @@ restart_itimer (struct hurd_signal_preemptor *preemptor,
   /* Either reload or disable the itimer.  */
   __spin_lock (&_hurd_itimer_lock);
   it.it_value = it.it_interval = _hurd_itimerval.it_interval;
-  setitimer_locked (&it, NULL, NULL);
+  setitimer_locked (&it, NULL, NULL, 1);
 
   /* Continue with normal delivery (or hold, etc.) of SIGALRM.  */
   return SIG_ERR;
@@ -154,7 +155,7 @@ restart_itimer (struct hurd_signal_preemptor *preemptor,
 
 static int
 setitimer_locked (const struct itimerval *new, struct itimerval *old,
-		  void *crit)
+		  void *crit, int hurd_siglocked)
 {
   struct itimerval newval;
   struct timeval now, remaining, elapsed;
@@ -192,16 +193,19 @@ setitimer_locked (const struct itimerval *new, struct itimerval *old,
 	 run `restart_itimer' each time a SIGALRM would arrive.  */
       static struct hurd_signal_preemptor preemptor =
 	{
-	  __sigmask (SIGALRM), 0, 0,
+	  __sigmask (SIGALRM), SI_TIMER, SI_TIMER,
 	  &restart_itimer,
 	};
-      __mutex_lock (&_hurd_siglock);
+      if (!hurd_siglocked)
+	__mutex_lock (&_hurd_siglock);
       if (! preemptor.next && _hurdsig_preemptors != &preemptor)
 	{
 	  preemptor.next = _hurdsig_preemptors;
 	  _hurdsig_preemptors = &preemptor;
+	  _hurdsig_preempted_set |= preemptor.signals;
 	}
-      __mutex_unlock (&_hurd_siglock);
+      if (!hurd_siglocked)
+	__mutex_unlock (&_hurd_siglock);
 
       if (_hurd_itimer_port == MACH_PORT_NULL)
 	{
@@ -221,11 +225,12 @@ setitimer_locked (const struct itimerval *new, struct itimerval *old,
 	    goto out;
 	  _hurd_itimer_thread_stack_base = 0; /* Anywhere.  */
 	  _hurd_itimer_thread_stack_size = __vm_page_size; /* Small stack.  */
-	  if (err = __mach_setup_thread (__mach_task_self (),
+	  if ((err = __mach_setup_thread (__mach_task_self (),
 					 _hurd_itimer_thread,
 					 &timer_thread,
 					 &_hurd_itimer_thread_stack_base,
 					 &_hurd_itimer_thread_stack_size))
+	      || (err = __mach_setup_tls(_hurd_itimer_thread)))
 	    {
 	      __thread_terminate (_hurd_itimer_thread);
 	      _hurd_itimer_thread = MACH_PORT_NULL;
@@ -348,7 +353,7 @@ __setitimer (enum __itimer_which which, const struct itimerval *new,
 
   crit = _hurd_critical_section_lock ();
   __spin_lock (&_hurd_itimer_lock);
-  return setitimer_locked (new, old, crit);
+  return setitimer_locked (new, old, crit, 0);
 }
 
 static void
@@ -363,7 +368,7 @@ fork_itimer (void)
   it = _hurd_itimerval;
   it.it_value = it.it_interval;
 
-  setitimer_locked (&it, NULL, NULL);
+  setitimer_locked (&it, NULL, NULL, 0);
 
   (void) &fork_itimer;		/* Avoid gcc optimizing out the function.  */
 }

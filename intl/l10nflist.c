@@ -240,7 +240,7 @@ _nl_make_l10nflist (struct loaded_l10nfile **l10nfile_list,
 
   retval = (struct loaded_l10nfile *)
     malloc (sizeof (*retval) + (__argz_count (dirlist, dirlist_len)
-				* (1 << pop (mask))
+				* 2 * (1 << pop (mask))
 				* sizeof (struct loaded_l10nfile *)));
   if (retval == NULL)
     {
@@ -286,6 +286,17 @@ _nl_make_l10nflist (struct loaded_l10nfile **l10nfile_list,
 				  language, territory, codeset,
 				  normalized_codeset, modifier, filename, 1);
       }
+  const char* langpack_dir = "/usr/share/locale-langpack";
+  if (strncmp(filename, "LC_MESSAGES", strlen("LC_MESSAGES")) == 0) {
+    for (cnt = mask; cnt >= 0; --cnt)
+      if ((cnt & ~mask) == 0)
+	{
+	    retval->successor[entries++]
+	      = _nl_make_l10nflist (l10nfile_list, langpack_dir, strlen (langpack_dir) + 1, cnt,
+				    language, territory, codeset,
+				    normalized_codeset, modifier, filename, 1);
+	}
+  }
   retval->successor[entries] = NULL;
 
   return retval;

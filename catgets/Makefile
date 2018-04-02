@@ -78,7 +78,7 @@ $(objpfx)de/libc.cat: $(objpfx)de.msg $(objpfx)gencat
 $(objpfx)tst-catgets.out: $(objpfx)de/libc.cat
 
 # Generate a non-simple input file.
-$(objpfx)de.msg: xopen-msg.awk $(..)po/de.po
+$(objpfx)de.msg: xopen-msg.awk $(common-objpfx)intl/tst-gettext-de.po
 	LC_ALL=C $(AWK) -f $^ $< > $@
 
 $(objpfx)test-gencat.out: test-gencat.sh $(objpfx)test-gencat \

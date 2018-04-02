@@ -64,27 +64,10 @@ rtld_hidden_data_def(__libc_stack_end)
 hp_timing_t _dl_cpuclock_offset;
 #endif
 
+/* TODO: this is never properly initialized in here.  */
+void *_dl_random attribute_relro = NULL;
 
 struct hurd_startup_data *_dl_hurd_data;
-
-/* This is used only within ld.so, via dl-minimal.c's __errno_location.  */
-#undef errno
-int errno attribute_hidden;
-
-/* Defining these variables here avoids the inclusion of hurdsig.c.  */
-unsigned long int __hurd_sigthread_stack_base;
-unsigned long int __hurd_sigthread_stack_end;
-unsigned long int *__hurd_sigthread_variables;
-
-/* Defining these variables here avoids the inclusion of init-first.c.
-   We need to provide temporary storage for the per-thread variables
-   of the main user thread here, since it is used for storing the
-   `errno' variable.  Note that this information is lost once we
-   relocate the dynamic linker.  */
-static unsigned long int threadvars[_HURD_THREADVAR_MAX];
-unsigned long int __hurd_threadvar_stack_offset
-  = (unsigned long int) &threadvars;
-unsigned long int __hurd_threadvar_stack_mask;
 
 #define FMH defined(__i386__)
 #if ! FMH
@@ -107,12 +90,28 @@ static void fmh(void) {
 	max=a; break;}
       fmha=a+=fmhs;}
     if (err) assert(err==KERN_NO_SPACE);
-    if (!fmha)fmhs=0;else{
-    fmhs=max-fmha;
-    err = __vm_map (__mach_task_self (),
-		    &fmha, fmhs, 0, 0, MACH_PORT_NULL, 0, 1,
-		    VM_PROT_NONE, VM_PROT_NONE, VM_INHERIT_COPY);
-    assert_perror(err);}
+    if (!fmha)
+      fmhs=0;
+    else
+      while (1) {
+	fmhs=max-fmha;
+	if (fmhs == 0)
+	  break;
+	err = __vm_map (__mach_task_self (),
+			&fmha, fmhs, 0, 0, MACH_PORT_NULL, 0, 1,
+			VM_PROT_NONE, VM_PROT_NONE, VM_INHERIT_COPY);
+	if (!err)
+	  break;
+	if (err != KERN_INVALID_ADDRESS && err != KERN_NO_SPACE)
+	  assert_perror(err);
+	vm_address_t new_max = (max - 1) & 0xf0000000U;
+	if (new_max >= max) {
+	  fmhs = 0;
+	  fmha = 0;
+	  break;
+	}
+	max = new_max;
+      }
   }
 /* XXX loser kludge for vm_map kernel bug */
 #endif
