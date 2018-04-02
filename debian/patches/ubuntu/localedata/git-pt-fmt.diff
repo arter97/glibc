@@ -1,0 +1,37 @@
+commit 9d5cfd8e838da31bd8fe0a55d4b43e8425dd3c2f
+Author: Mike FABIAN <mfabian@redhat.com>
+Date:   Wed Feb 14 18:17:42 2018 +0100
+
+    Use / instead of - in d_fmt for pt_BR and pt_PT [BZ #17438]
+    
+            [BZ #17438]
+            * localedata/locales/pt_BR (LC_TIME): use / instead of -
+            in d_fmt.
+            * localedata/locales/pt_PT (LC_TIME): likewise
+
+diff --git a/localedata/locales/pt_BR b/localedata/locales/pt_BR
+index df992d2d26..a778e52617 100644
+--- a/localedata/locales/pt_BR
++++ b/localedata/locales/pt_BR
+@@ -119,7 +119,7 @@ mon     "janeiro";/
+ 	"novembro";/
+ 	"dezembro"
+ d_t_fmt "%a %d %b %Y %T %Z"
+-d_fmt   "%d-%m-%Y"
++d_fmt   "%d//%m//%Y"
+ t_fmt   "%T"
+ am_pm   "";""
+ t_fmt_ampm ""
+diff --git a/localedata/locales/pt_PT b/localedata/locales/pt_PT
+index bfd89650bc..6225036edf 100644
+--- a/localedata/locales/pt_PT
++++ b/localedata/locales/pt_PT
+@@ -123,7 +123,7 @@ mon     "janeiro";/
+         "novembro";/
+         "dezembro"
+ d_t_fmt "%a %d %b %Y %T %Z"
+-d_fmt   "%d-%m-%Y"
++d_fmt   "%d//%m//%Y"
+ t_fmt   "%T"
+ am_pm   "";""
+ t_fmt_ampm ""
