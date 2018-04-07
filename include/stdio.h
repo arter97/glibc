@@ -206,25 +206,25 @@ libc_hidden_proto (__gen_tempfd)
 __extern_inline int
 __NTH (__feof_unlocked (FILE *__stream))
 {
-  return __feof_unlocked_body (__stream);
+  return _IO_feof_unlocked (__stream);
 }
 
 __extern_inline int
 __NTH (__ferror_unlocked (FILE *__stream))
 {
-  return __ferror_unlocked_body (__stream);
+  return _IO_ferror_unlocked (__stream);
 }
 
 __extern_inline int
 __getc_unlocked (FILE *__fp)
 {
-  return __getc_unlocked_body (__fp);
+  return _IO_getc_unlocked (__fp);
 }
 
 __extern_inline int
 __putc_unlocked (int __c, FILE *__stream)
 {
-  return __putc_unlocked_body (__c, __stream);
+  return _IO_putc_unlocked (__c, __stream);
 }
 #  endif
 
