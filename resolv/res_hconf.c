@@ -278,6 +278,8 @@ do_init (void)
   if (hconf_name == NULL)
     hconf_name = _PATH_HOSTCONF;
 
+  arg_bool (ENV_MULTI, 1, "on", HCONF_FLAG_MULTI);
+
   fp = fopen (hconf_name, "rce");
   if (fp)
     {

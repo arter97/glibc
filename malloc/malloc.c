@@ -821,7 +821,7 @@ int      __posix_memalign(void **, size_t, size_t);
 #define M_TRIM_THRESHOLD       -1
 
 #ifndef DEFAULT_TRIM_THRESHOLD
-#define DEFAULT_TRIM_THRESHOLD (128 * 1024)
+#define DEFAULT_TRIM_THRESHOLD (512 * 1024)
 #endif
 
 /*
@@ -854,7 +854,7 @@ int      __posix_memalign(void **, size_t, size_t);
 #define M_TOP_PAD              -2
 
 #ifndef DEFAULT_TOP_PAD
-#define DEFAULT_TOP_PAD        (0)
+#define DEFAULT_TOP_PAD        (64 * 1024)
 #endif
 
 /*
@@ -2330,6 +2330,8 @@ sysmalloc (INTERNAL_SIZE_T nb, mstate av)
 
           if (mm != MAP_FAILED)
             {
+              if (size > 8 * 1024 * 1024)
+	              __madvise (mm, size , MADV_HUGEPAGE);
               /*
                  The offset to the start of the mmapped region is stored
                  in the prev_size field of the chunk. This allows us to adjust
@@ -4148,6 +4150,7 @@ _int_free (mstate av, mchunkptr p, int have_lock)
   mchunkptr bck;               /* misc temp for linking */
   mchunkptr fwd;               /* misc temp for linking */
 
+  static int alternate;
   size = chunksize (p);
 
   /* Little security check which won't hurt performance: the
@@ -4366,8 +4369,14 @@ _int_free (mstate av, mchunkptr p, int have_lock)
       if (av == &main_arena) {
 #ifndef MORECORE_CANNOT_TRIM
 	if ((unsigned long)(chunksize(av->top)) >=
-	    (unsigned long)(mp_.trim_threshold))
-	  systrim(mp_.top_pad, av);
+            (unsigned long)(mp_.trim_threshold)) {
+        if (alternate) {
+            systrim(mp_.top_pad, av);
+            alternate = 0;
+        } else {
+            alternate = 1;
+        }
+    }
 #endif
       } else {
 	/* Always try heap_trim(), even if the top chunk is not
@@ -4802,7 +4811,7 @@ mtrim (mstate av, size_t pad)
                        content.  */
                     memset (paligned_mem, 0x89, size & ~psm1);
 #endif
-                    __madvise (paligned_mem, size & ~psm1, MADV_DONTNEED);
+                    __madvise (paligned_mem, size & ~psm1, MADV_FREE);
 
                     result = 1;
                   }

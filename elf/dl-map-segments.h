@@ -143,6 +143,7 @@ _dl_map_segments (struct link_map *l, int fd,
                               -1, 0);
               if (__glibc_unlikely (mapat == MAP_FAILED))
                 return DL_MAP_SEGMENTS_ERROR_MAP_ZERO_FILL;
+              __madvise((caddr_t) zeropage, zeroend - zeropage, MADV_MERGEABLE);
             }
         }
 

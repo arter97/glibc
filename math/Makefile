@@ -21,6 +21,8 @@ subdir		:= math
 
 include ../Makeconfig
 
+CFLAGS-.o += -fno-stack-protector
+
 # Installed header files.
 headers		:= math.h bits/mathcalls.h bits/mathinline.h \
 		   fpu_control.h complex.h bits/cmathcalls.h fenv.h \

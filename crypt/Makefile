@@ -22,6 +22,8 @@ subdir	:= crypt
 
 include ../Makeconfig
 
+CFLAGS-.o += -flto -ffat-lto-objects -fno-stack-protector
+
 headers := crypt.h
 
 extra-libs := libcrypt

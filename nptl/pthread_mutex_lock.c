@@ -73,9 +73,22 @@ __pthread_mutex_lock (pthread_mutex_t *mutex)
   if (__glibc_likely (type == PTHREAD_MUTEX_TIMED_NP))
     {
       FORCE_ELISION (mutex, goto elision);
-    simple:
-      /* Normal mutex.  */
-      LLL_MUTEX_LOCK (mutex);
+      if (LLL_MUTEX_TRYLOCK (mutex) != 0)
+	{
+	  int cnt = 0;
+	  do
+	    {
+	      if (cnt++ >= 256 || !__is_smp)
+		{
+		  /* Normal mutex.  */
+simple:
+		  LLL_MUTEX_LOCK (mutex);
+		  break;
+		}
+	      atomic_spin_nop ();
+	    }
+	  while (LLL_MUTEX_TRYLOCK (mutex) != 0);
+	} 
       assert (mutex->__data.__owner == 0);
     }
 #ifdef HAVE_ELISION

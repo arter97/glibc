@@ -110,7 +110,7 @@ int opt_verbose;
 
 /* Format to support.  */
 /* 0: only libc5/glibc2; 1: both; 2: only glibc 2.2.  */
-int opt_format = 1;
+int opt_format = 2;
 
 /* Build cache.  */
 static int opt_build_cache = 1;

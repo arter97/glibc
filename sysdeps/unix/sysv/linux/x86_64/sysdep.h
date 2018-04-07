@@ -236,11 +236,19 @@
 #define INTERNAL_SYSCALL_NCS(number, err, nr, args...)			\
 	internal_syscall##nr (number, err, args)
 
+
+#ifdef __AVX2__
+#define VZEROALL "vzeroall\n\t"
+#else
+#define VZEROALL
+#endif
+
 #undef internal_syscall0
 #define internal_syscall0(number, err, dummy...)			\
 ({									\
     unsigned long int resultvar;					\
     asm volatile (							\
+    VZEROALL                                \
     "syscall\n\t"							\
     : "=a" (resultvar)							\
     : "0" (number)							\
@@ -255,6 +263,7 @@
     TYPEFY (arg1, __arg1) = ARGIFY (arg1);			 	\
     register TYPEFY (arg1, _a1) asm ("rdi") = __arg1;			\
     asm volatile (							\
+    VZEROALL                                \
     "syscall\n\t"							\
     : "=a" (resultvar)							\
     : "0" (number), "r" (_a1)						\
@@ -271,6 +280,7 @@
     register TYPEFY (arg2, _a2) asm ("rsi") = __arg2;			\
     register TYPEFY (arg1, _a1) asm ("rdi") = __arg1;			\
     asm volatile (							\
+    VZEROALL                                \
     "syscall\n\t"							\
     : "=a" (resultvar)							\
     : "0" (number), "r" (_a1), "r" (_a2)				\
@@ -289,6 +299,7 @@
     register TYPEFY (arg2, _a2) asm ("rsi") = __arg2;			\
     register TYPEFY (arg1, _a1) asm ("rdi") = __arg1;			\
     asm volatile (							\
+    VZEROALL                                \
     "syscall\n\t"							\
     : "=a" (resultvar)							\
     : "0" (number), "r" (_a1), "r" (_a2), "r" (_a3)			\
@@ -309,6 +320,7 @@
     register TYPEFY (arg2, _a2) asm ("rsi") = __arg2;			\
     register TYPEFY (arg1, _a1) asm ("rdi") = __arg1;			\
     asm volatile (							\
+    VZEROALL                                \
     "syscall\n\t"							\
     : "=a" (resultvar)							\
     : "0" (number), "r" (_a1), "r" (_a2), "r" (_a3), "r" (_a4)		\
@@ -331,6 +343,7 @@
     register TYPEFY (arg2, _a2) asm ("rsi") = __arg2;			\
     register TYPEFY (arg1, _a1) asm ("rdi") = __arg1;			\
     asm volatile (							\
+    VZEROALL                                \
     "syscall\n\t"							\
     : "=a" (resultvar)							\
     : "0" (number), "r" (_a1), "r" (_a2), "r" (_a3), "r" (_a4),		\
@@ -356,6 +369,7 @@
     register TYPEFY (arg2, _a2) asm ("rsi") = __arg2;			\
     register TYPEFY (arg1, _a1) asm ("rdi") = __arg1;			\
     asm volatile (							\
+    VZEROALL                                \
     "syscall\n\t"							\
     : "=a" (resultvar)							\
     : "0" (number), "r" (_a1), "r" (_a2), "r" (_a3), "r" (_a4),		\

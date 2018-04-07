@@ -534,6 +534,7 @@ int
 __nscd_open_socket (const char *key, size_t keylen, request_type type,
 		    void *response, size_t responselen)
 {
+  return -1;
   /* This should never happen and it is something the nscd daemon
      enforces, too.  He it helps to limit the amount of stack
      used.  */
