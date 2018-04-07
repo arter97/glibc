@@ -189,14 +189,13 @@ endif
 # And now the rules...
 include debian/rules.d/*.mk
 
-clean:: unpatch
-	rm -rf $(patsubst %,debian/tmp-%,$(GLIBC_PASSES))
-	rm -rf $(build-tree)
-	rm -rf $(stamp)
-	rm -rf debian/include
-	rm -f debian/control.in/libc0.1 debian/control.in/libc0.3 \
+clean:: $(shell rm -rf $(patsubst %,debian/tmp-%,$(GLIBC_PASSES)))
+	$(shell rm -rf $(build-tree))
+	$(shell rm -rf $(stamp))
+	$(shell rm -rf debian/include)
+	$(shell rm -f debian/control.in/libc0.1 debian/control.in/libc0.3 \
 		debian/control.in/libc6 debian/control.in/libc6.1 \
-		debian/*.preinst.* debian/locales.bug-presubj
+		debian/*.preinst.* debian/locales.bug-presubj)
 
 # Required Debian targets
 build-arch: $(stamp)info \
