@@ -184,7 +184,8 @@ endif
 # tree.  Otherwise, install gnu/stubs.h later, after the rest of the
 # build is done.
 ifeq ($(install-bootstrap-headers),yes)
-install-headers: $(inst_includedir)/gnu/stubs.h $(installed-stubs)
+install-headers: $(inst_includedir)/gnu/stubs.h $(installed-stubs) \
+		 $(inst_includedir)/$(lib-names-h-abi)
 endif
 
 # Since stubs.h is never needed when building the library, we simplify the

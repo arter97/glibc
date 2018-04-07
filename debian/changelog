@@ -1,3 +1,13 @@
+glibc (2.27-0ubuntu3) bionic; urgency=medium
+
+  * Cherry pick from the Debian packaging:
+    - debian/sysdeps/*.mk: install gnu/lib-names-*.h for multilib builds.
+    - debian/patches/any/local-bootstrap-headers.diff: update to install
+      gnu/lib-names-$abi.h.  Closes: #892126.
+  * d/p/git-updates.diff: update from upstream stable branch (taken from 2.27-3).
+
+ -- Matthias Klose <doko@ubuntu.com>  Mon, 02 Apr 2018 23:07:51 +0200
+
 glibc (2.27-0ubuntu2) bionic; urgency=medium
 
   * debian/patches/git-updates.diff: Update to 2.27 master at 2018-02-16.

@@ -1,3 +1,155 @@
+2018-03-29  Florian Weimer  <fweimer@redhat.com>
+
+	* sysdeps/unix/sysv/linux/i386/tst-bz21269.c (do_test): Also
+	capture SIGBUS.
+
+2018-03-23  Andrew Senkevich  <andrew.senkevich@intel.com>
+	    Max Horn  <max@quendi.de>
+
+	[BZ #22644]
+	* sysdeps/i386/i686/multiarch/memcpy-sse2-unaligned.S: Fixed
+	branch conditions.
+	* string/test-memmove.c (do_test2): New testcase.
+
+2018-02-22  Andrew Waterman <andrew@sifive.com>
+
+	[BZ # 22884]
+	* sysdeps/riscv/rvd/s_fmax.c (__fmax): Handle sNaNs correctly.
+	* sysdeps/riscv/rvd/s_fmin.c (__fmin): Likewise.
+	* sysdeps/riscv/rvf/s_fmaxf.c (__fmaxf): Likewise.
+	* sysdeps/riscv/rvf/s_fminf.c (__fminf): Likewise.
+
+2018-02-22  DJ Delorie  <dj@delorie.com>
+
+	* sysdeps/riscv/tls-macros.h: Do not initialize $gp.
+
+2018-03-16  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	[BZ #22963]
+	* localedata/locales/cs_CZ (mon): Rename to...
+	(alt_mon): This.
+	(mon): Import from CLDR (genitive case).
+
+2018-03-16  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	[BZ #22937]
+	* localedata/locales/el_CY (abmon): Rename to...
+	(ab_alt_mon): This.
+	(abmon): Import from CLDR (abbreviated genitive case).
+	* localedata/locales/el_GR (abmon): Rename to...
+	(ab_alt_mon): This.
+	(abmon): Import from CLDR (abbreviated genitive case).
+
+2018-03-16  Rafal Luzynski  <digitalfreak@lingonborough.com>
+
+	[BZ #22932]
+	* localedata/locales/lt_LT (abmon): Synchronize with CLDR.
+
+2018-03-16  Robert Buj  <robert.buj@gmail.com>
+
+	[BZ #22848]
+	* localedata/locales/ca_ES (abmon): Rename to...
+	(ab_alt_mon): This, then synchronize with CLDR (nominative case).
+	(mon): Rename to...
+	(alt_mon): This.
+	(abmon): Import from CLDR (genitive case, month names preceded by
+	"de" or "d’").
+	(mon): Likewise.
+	(abday): Synchronize with CLDR.
+	(d_t_fmt): Likewise.
+	(d_fmt): Likewise.
+	(am_pm): Likewise.
+
+	(LC_TIME): Improve indentation.
+	(LC_TELEPHONE): Likewise.
+	(LC_NAME): Likewise.
+	(LC_ADDRESS): Likewise.
+
+2018-03-12  Dmitry V. Levin  <ldv@altlinux.org>
+
+	* po/pt_BR.po: Update translations.
+
+2018-03-03  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #21269]
+	* sysdeps/unix/sysv/linux/i386/Makefile (tests): Add tst-bz21269.
+	* sysdeps/unix/sysv/linux/i386/sigaction.c (SET_SA_RESTORER): Clear
+	sa_restorer for vDSO case.
+	* sysdeps/unix/sysv/linux/i386/tst-bz21269.c: New file.
+
+2018-03-03  Andreas Schwab  <schwab@linux-m68k.org>
+
+	[BZ #22918]
+	* nss/nsswitch.h (DEFINE_DATABASE): Don't define __nss_*_database.
+	* nss/nsswitch.c (DEFINE_DATABASE): Define __nss_*_database here.
+	* nscd/gai.c (__nss_hosts_database): Readd definition.
+	* posix/tst-rfc3484.c (__nss_hosts_database): Likewise.
+	* posix/tst-rfc3484-3.c (__nss_hosts_database): Likewise.
+	* posix/tst-rfc3484-2.c (__nss_hosts_database): Likewise.
+
+2018-03-01  DJ Delorie  <dj@delorie.com>
+
+	[BZ #22342]
+	* nscd/netgroupcache.c (addinnetgrX): Include trailing NUL in
+	key value.
+
+2018-02-26  Dmitry V. Levin  <ldv@altlinux.org>
+
+	[BZ #22433]
+	[BZ #22807]
+	* sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h (__ptrace_request): Add
+	PTRACE_GETREGS, PTRACE_SETREGS, PTRACE_GETFPREGS, PTRACE_SETFPREGS,
+	PTRACE_GETVRREGS, PTRACE_SETVRREGS, PTRACE_GETEVRREGS,
+	PTRACE_SETEVRREGS, PTRACE_GETREGS64, PTRACE_SETREGS64,
+	PTRACE_GET_DEBUGREG, PTRACE_SET_DEBUGREG, PTRACE_GETVSRREGS,
+	PTRACE_SETVSRREGS, and PTRACE_SINGLEBLOCK.
+
+2018-02-26  Tulio Magno Quites Machado Filho  <tuliom@linux.vnet.ibm.com>
+
+	* sysdeps/unix/sysv/linux/powerpc/sys/ptrace.h: Undefine Linux
+	macros used in __ptrace_request.
+
+2018-02-21  Mike FABIAN  <mfabian@redhat.com>
+
+	[BZ #22517]
+	* localedata/locales/et_EE (LC_COLLATE): add missing “reorder-end”
+
+2018-02-21  Rical Jasan  <ricaljasan@pacific.net>
+
+	* io/fcntl.h: Fix a typo in a comment.
+
+2018-02-20  Rical Jasan  <ricaljasan@pacific.net>
+
+	* manual/creature.texi (_ISOC99_SOURCE): Update the dated
+	description.
+
+	[BZ #16335]
+	* manual/creature.texi (_POSIX_C_SOURCE): Document special values
+	of 199606L, 200112L, and 200809L.
+	(_XOPEN_SOURCE): Document special values of 600 and 700.
+	(_ISOC11_SOURCE): Document macro.
+	(_ATFILE_SOURCE): Likewise.
+	(_FORTIFY_SOURCE): Likewise.
+
+2018-03-09  Aurelien Jarno  <aurelien@aurel32.net>
+
+	[BZ #22919]
+	* sysdeps/unix/sysv/linux/sparc/sparc32/setcontext.S (__startcontext):
+	Add nop before __startcontext, add explaining comments.
+
+2018-03-07  Adhemerval Zanella  <adhemerval.zanella@linaro.org>
+
+	[BZ #22926]
+	* sysdeps/powerpc/powerpc32/sysdep.h (ABORT_TRANSACTION_IMPL): Define
+	empty for __SPE__.
+	* sysdeps/powerpc/sysdep.h (ABORT_TRANSACTION): Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/elision-lock.c (__lll_lock_elision):
+	Do not build hardware transactional code for __SPE__.
+	* sysdeps/unix/sysv/linux/powerpc/elision-trylock.c
+	(__lll_trylock_elision): Likewise.
+	* sysdeps/unix/sysv/linux/powerpc/elision-unlock.c
+	(__lll_unlock_elision): Likewise.
+
 2018-02-19  Rical Jasan  <ricaljasan@pacific.net>
 
 	[BZ #6889]
